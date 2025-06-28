@@ -1,0 +1,12 @@
+path: /data/OPIXray
+train: train/images
+val:   test/images
+
+nc: 5
+names:
+  0: Folding_Knife
+  1: Multi-tool_Knife
+  2: Scissor
+  3: Straight_Knife
+  4: Utility_Knife
+  
