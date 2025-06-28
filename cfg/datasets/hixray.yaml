@@ -1,0 +1,23 @@
+# hixray.yaml
+
+path: /data/HiXray
+
+train: train/images
+val: test/images
+
+nc: 13   # For transfer learning based on OPIXray pre-trained models
+
+names:
+  0: Folding_Knife
+  1: Multi-tool_Knife
+  2: Scissor
+  3: Straight_Knife
+  4: Utility_Knife
+  5: Portable_Charger_1
+  6: Portable_Charger_2
+  7: Mobile_Phone
+  8: Laptop
+  9: Tablet
+  10: Cosmetic
+  11: Water
+  12: Nonmetallic_Lighter
