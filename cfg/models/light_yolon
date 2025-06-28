@@ -1,0 +1,41 @@
+# light_yolon.yaml
+# YOLOv8-n compatible Light-YOLO-n model
+# Designed for ultra-lightweight deployments
+
+nc: 80 # number of classes
+
+# Light-YOLO backbone
+backbone:
+  # [from, repeats, module, args]
+  - [-1, 1, Conv, [16, 3, 2]]  # 0-P1/2: round(64 * 0.25 / 8) * 8 = 16
+  - [-1, 1, Conv, [32, 3, 2]]  # 1-P2/4: round(128 * 0.25 / 8) * 8 = 32
+  - [-1, 1, SE_StarBlock, [32, True]] # 2: repeats = max(round(3 * 0.25), 1) = 1, channels = round(128 * 0.25 / 8) * 8 = 32
+  - [-1, 1, Conv, [64, 3, 2]]  # 3-P3/8: round(256 * 0.25 / 8) * 8 = 64
+  - [-1, 2, SE_StarBlock, [64, True]] # 4 (P3 output): repeats = max(round(6 * 0.25), 1) = 2, channels = round(256 * 0.25 / 8) * 8 = 64
+  - [-1, 1, Conv, [128, 3, 2]] # 5-P4/16: round(512 * 0.25 / 8) * 8 = 128
+  - [-1, 2, SE_StarBlock, [128, True]] # 6 (P4 output): repeats = max(round(6 * 0.25), 1) = 2, channels = round(512 * 0.25 / 8) * 8 = 128
+  - [-1, 1, Conv, [256, 3, 2]] # 7-P5/32: round(1024 * 0.25 / 8) * 8 = 256
+  - [-1, 1, SE_StarBlock, [256, True]] # 8 (P5 output): repeats = max(round(3 * 0.25), 1) = 1, channels = round(1024 * 0.25 / 8) * 8 = 256
+  - [-1, 1, SPPF, [256, 5]]    # 9: channels = round(1024 * 0.25 / 8) * 8 = 256
+
+# Light-YOLO neck
+neck:
+  # [from, repeats, module, args]
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 10
+  - [[-1, 6], 1, Concat, [1]]  # 11 (cat with P4 from backbone)
+  - [-1, 1, C2f_CSC, [128, True]] # 12: repeats = max(round(3 * 0.25), 1) = 1, channels = round(512 * 0.25 / 8) * 8 = 128
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 13
+  - [[-1, 4], 1, Concat, [1]]  # 14 (cat with P3 from backbone)
+  - [-1, 1, C2f_CSC, [64, True]] # 15 (P3/8-neck): repeats = max(round(3 * 0.25), 1) = 1, channels = round(256 * 0.25 / 8) * 8 = 64
+
+  - [-1, 1, Conv, [64, 3, 2]]  # 16: channels = round(256 * 0.25 / 8) * 8 = 64
+  - [[-1, 12], 1, Concat, [1]] # 17 (cat with P4 from neck)
+  - [-1, 1, C2f_CSC, [128, True]] # 18 (P4/16-neck): repeats = max(round(3 * 0.25), 1) = 1, channels = round(512 * 0.25 / 8) * 8 = 128
+
+  - [-1, 1, Conv, [128, 3, 2]] # 19: channels = round(512 * 0.25 / 8) * 8 = 128
+  - [[-1, 9], 1, Concat, [1]]  # 20 (cat with P5 from backbone/SPPF)
+  - [-1, 1, C2f_CSC, [256, True]] # 21 (P5/32-neck): repeats = max(round(3 * 0.25), 1) = 1, channels = round(1024 * 0.25 / 8) * 8 = 256
+
+# Light-YOLO head
+head:
+  - [[15, 18, 21], 1, Detect_LSCD_V3, [nc, 64]]
